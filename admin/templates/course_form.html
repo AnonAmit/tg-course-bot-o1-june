@@ -1,0 +1,132 @@
+{% extends "base.html" %} {% block title %} {% if course %}Edit Course{% else %}Add New Course{% endif %} - Admin Dashboard {% endblock %} {% block content %}
+<div class="mt-4 mb-4">
+    <h2>
+        <i class="fas fa-book me-2"></i> {% if course %}Edit Course: {{ course.title }}{% else %}Add New Course{% endif %}
+    </h2>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label for="title" class="form-label">Course Title*</label>
+                <input type="text" class="form-control" id="title" name="title" value="{{ course.title if course else '' }}" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" id="description" name="description" rows="4">{{ course.description if course else '' }}</textarea>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="price" class="form-label">Price (₹)*</label>
+                    <input type="number" step="0.01" min="0" class="form-control" id="price" name="price" value="{{ " %.2f "|format(course.price) if course else '' }}" required>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="category_id" class="form-label">Category</label>
+                    <select class="form-select" id="category_id" name="category_id">
+                        <option value="">Uncategorized</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}" {% if course and course.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="file_link" class="form-label">Course Content Link*</label>
+                <input type="text" class="form-control" id="file_link" name="file_link" value="{{ course.file_link if course else '' }}" required>
+                <div class="form-text">Direct link to the course content (Google Drive, Mega, etc.)</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="demo_video_link" class="form-label">Demo Video Link</label>
+                <input type="text" class="form-control" id="demo_video_link" name="demo_video_link" value="{{ course.demo_video_link if course and course.demo_video_link else '' }}">
+                <div class="form-text">Link to a demo video for the course (e.g., Telegram channel link, YouTube video).</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="image_upload" class="form-label">Course Image Upload</label>
+                <input type="file" class="form-control" id="image_upload" name="image_upload" accept="image/*">
+                <div class="form-text">Upload an image for the course (JPG, PNG, GIF)</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="image_link" class="form-label">Or Course Image Link</label>
+                <input type="text" class="form-control" id="image_link" name="image_link" value="{{ course.image_link if course else '' }}">
+                <div class="form-text">URL to the course cover image (if not uploading)</div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="qr_code_image" class="form-label">QR Code Image (for UPI)</label>
+                    <select class="form-select" id="qr_code_image" name="qr_code_image">
+                        <option value="">None</option>
+                        {% set qr_prices = [9, 49, 99, 149, 199, 299, 499, 799, 999] %}
+                        {% for price_val in qr_prices %}
+                            <option value="{{ price_val }}.png" {% if course and course.qr_code_image == price_val ~ '.png' %}selected{% endif %}>QR for Rs. {{ price_val }} ({{ price_val }}.png)</option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text">Select a QR code image if UPI payment is enabled and price matches.</div>
+                </div>
+                <div class="col-md-6 mb-3 align-self-center">
+                    <div class="form-check mt-4">
+                        <input type="checkbox" class="form-check-input" id="is_free" name="is_free" {% if course and course.is_free %}checked{% endif %}>
+                        <label class="form-check-label" for="is_free">Mark as Free Course</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Payment Options</label>
+                <div class="form-text mb-2">Select available payment methods for this course</div>
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="payment_upi" name="payment_options" value="upi" {% if course and course.payment_options and 'upi' in course.payment_options %}checked{% endif %}>
+                    <label class="form-check-label" for="payment_upi">UPI Payment</label>
+                </div>
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="payment_crypto" name="payment_options" value="crypto" {% if course and course.payment_options and 'crypto' in course.payment_options %}checked{% endif %}>
+                    <label class="form-check-label" for="payment_crypto">Cryptocurrency</label>
+                </div>
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="payment_paypal" name="payment_options" value="paypal" {% if course and course.payment_options and 'paypal' in course.payment_options %}checked{% endif %}>
+                    <label class="form-check-label" for="payment_paypal">PayPal</label>
+                </div>
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="payment_cod" name="payment_options" value="cod" {% if course and course.payment_options and 'cod' in course.payment_options %}checked{% endif %}>
+                    <label class="form-check-label" for="payment_cod">Cash on Delivery</label>
+                </div>
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="payment_gift" name="payment_options" value="gift" {% if course and course.payment_options and 'gift' in course.payment_options %}checked{% endif %}>
+                    <label class="form-check-label" for="payment_gift">Gift Card</label>
+                </div>
+            </div>
+
+            {% if course and course.image_link %}
+            <div class="mb-3">
+                <label class="form-label">Current Image</label>
+                <div>
+                    <img src="{{ course.image_link }}" alt="{{ course.title }}" style="max-width: 200px; max-height: 150px;" class="img-thumbnail">
+                </div>
+            </div>
+            {% endif %} {% if course %}
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="is_active" name="is_active" {% if course.is_active %}checked{% endif %}>
+                <label class="form-check-label" for="is_active">Active (visible to users)</label>
+            </div>
+            {% endif %}
+
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('courses') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Courses
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> {% if course %}Save Changes{% else %}Add Course{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

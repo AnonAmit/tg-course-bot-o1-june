@@ -1,0 +1,204 @@
+{% extends "base.html" %} {% block title %}User Details - Admin Dashboard{% endblock %} {% block content %}
+<div class="d-flex justify-content-between align-items-center mt-4 mb-4">
+    <h2><i class="fas fa-user me-2"></i>User Details</h2>
+    <a href="{{ url_for('users') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back to Users
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-id-card me-2"></i>User Profile</h4>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <div class="bg-light rounded-circle d-inline-flex justify-content-center align-items-center mb-3" style="width: 100px; height: 100px;">
+                        <span class="display-4 text-muted">{{ user.first_name[0] }}</span>
+                    </div>
+                    <h4>{{ user.first_name }} {{ user.last_name }}</h4>
+                    {% if user.username %}
+                    <p class="text-muted">@{{ user.username }}</p>
+                    {% endif %}
+                    <div>
+                        {% if user.is_banned %}
+                        <span class="badge bg-danger">Banned</span> {% else %}
+                        <span class="badge bg-success">Active</span> {% endif %}
+                    </div>
+                </div>
+
+                <table class="table table-borderless">
+                    <tr>
+                        <th>User ID:</th>
+                        <td>{{ user.id }}</td>
+                    </tr>
+                    <tr>
+                        <th>Telegram ID:</th>
+                        <td>{{ user.telegram_id }}</td>
+                    </tr>
+                    <tr>
+                        <th>Joined Date:</th>
+                        <td>{{ user.joined_date.strftime('%Y-%m-%d') }}</td>
+                    </tr>
+                    <tr>
+                        <th>Last Activity:</th>
+                        <td>{{ user.last_activity.strftime('%Y-%m-%d %H:%M') if user.last_activity else 'N/A' }}</td>
+                    </tr>
+                </table>
+
+                {% if user.is_banned %}
+                <div class="alert alert-danger mt-3">
+                    <h5><i class="fas fa-exclamation-triangle me-2"></i>This user is banned</h5>
+                    <p class="mb-0"><strong>Reason:</strong> {{ user.ban_reason or 'No reason provided' }}</p>
+                    <div class="mt-2">
+                        <a href="{{ url_for('unban_user', user_id=user.id) }}" class="btn btn-success" onclick="return confirm('Are you sure you want to unban this user?')">
+                            <i class="fas fa-user-check me-1"></i> Unban User
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                <div class="mt-3">
+                    <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#banUserModal">
+                        <i class="fas fa-user-slash me-1"></i> Ban User
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>User Purchases</h4>
+            </div>
+            <div class="card-body">
+                {% if payments %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Course</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payments %}
+                            <tr>
+                                <td>{{ payment.id }}</td>
+                                <td>
+                                    {% set course = payment.get_course() %} {{ course.title if course else 'Unknown Course' }}
+                                </td>
+                                <td>₹{{ "%.2f"|format(payment.amount) }}</td>
+                                <td>{{ payment.payment_method|upper }}</td>
+                                <td>
+                                    {% if payment.status == 'pending' %}
+                                    <span class="badge bg-warning">Pending</span> {% elif payment.status == 'approved' %}
+                                    <span class="badge bg-success">Approved</span> {% elif payment.status == 'rejected' %}
+                                    <span class="badge bg-danger">Rejected</span> {% endif %}
+                                </td>
+                                <td>{{ payment.submission_date.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    <a href="{{ url_for('payment_detail', payment_id=payment.id) }}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> This user hasn't purchased any courses yet.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0"><i class="fas fa-history me-2"></i>User Activity Logs</h4>
+            </div>
+            <div class="card-body">
+                {% set logs = get_user_logs(user.telegram_id) %} {% if logs %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Action</th>
+                                <th>IP Address</th>
+                                <th>Details</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in logs %}
+                            <tr>
+                                <td>
+                                    {% if 'error' in log.action or 'spam' in log.action or 'banned' in log.action %}
+                                    <span class="badge bg-danger">{{ log.action }}</span> {% elif 'payment' in log.action or 'purchase' in log.action %}
+                                    <span class="badge bg-success">{{ log.action }}</span> {% elif 'view' in log.action or 'command' in log.action %}
+                                    <span class="badge bg-info">{{ log.action }}</span> {% else %}
+                                    <span class="badge bg-secondary">{{ log.action }}</span> {% endif %}
+                                </td>
+                                <td>{{ log.ip_address or 'N/A' }}</td>
+                                <td>
+                                    {% if log.details %}
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#logDetails-{{ log.id }}">
+                                        View Details
+                                    </button>
+                                    <div class="collapse mt-2" id="logDetails-{{ log.id }}">
+                                        <div class="card card-body">
+                                            {{ log.details }}
+                                        </div>
+                                    </div>
+                                    {% else %} N/A {% endif %}
+                                </td>
+                                <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> No activity logs found for this user.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ban User Modal -->
+<div class="modal fade" id="banUserModal" tabindex="-1" aria-labelledby="banUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="banUserModalLabel">Ban User: {{ user.first_name }} {{ user.last_name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('ban_user', user_id=user.id) }}" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="banReason" class="form-label">Reason for ban</label>
+                        <textarea class="form-control" id="banReason" name="reason" rows="3" required></textarea>
+                        <div class="form-text">Please provide a reason for banning this user.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Ban User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
