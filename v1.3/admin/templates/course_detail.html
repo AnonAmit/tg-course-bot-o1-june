@@ -1,0 +1,122 @@
+{% extends "base.html" %} {% block title %}Course Details - Admin Dashboard{% endblock %} {% block content %}
+<div class="d-flex justify-content-between align-items-center mt-4 mb-4">
+    <h2><i class="fas fa-book me-2"></i>Course Details</h2>
+    <div>
+        <a href="{{ url_for('edit_course', course_id=course.id) }}" class="btn btn-primary me-2">
+            <i class="fas fa-edit me-1"></i> Edit Course
+        </a>
+        <a href="{{ url_for('courses') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to Courses
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-image me-2"></i>Course Image</h4>
+            </div>
+            <div class="card-body text-center">
+                {% if course.image_link %}
+                <img src="{{ course.image_link }}" alt="{{ course.title }}" class="img-fluid rounded" style="max-height: 300px;"> {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> No image available for this course.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-info-circle me-2"></i>Course Information</h4>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th style="width: 30%">Course ID:</th>
+                        <td>{{ course.id }}</td>
+                    </tr>
+                    <tr>
+                        <th>Title:</th>
+                        <td>{{ course.title }}</td>
+                    </tr>
+                    <tr>
+                        <th>Category:</th>
+                        <td>{{ course.category_obj.name if course.category_obj else 'Uncategorized' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Price:</th>
+                        <td>₹{{ "%.2f"|format(course.price) }}</td>
+                    </tr>
+                    <tr>
+                        <th>Status:</th>
+                        <td>
+                            {% if course.is_active %}
+                            <span class="badge bg-success">Active</span> {% else %}
+                            <span class="badge bg-danger">Inactive</span> {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Created Date:</th>
+                        <td>{{ course.created_date.strftime('%Y-%m-%d') }}</td>
+                    </tr>
+                    <tr>
+                        <th>Updated Date:</th>
+                        <td>{{ course.updated_date.strftime('%Y-%m-%d') }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0"><i class="fas fa-align-left me-2"></i>Course Description</h4>
+            </div>
+            <div class="card-body">
+                {% if course.description %}
+                <p>{{ course.description }}</p>
+                {% else %}
+                <p class="text-muted">No description available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mt-4">
+    <div class="card-header bg-success text-white">
+        <h4 class="mb-0"><i class="fas fa-link me-2"></i>Course Links</h4>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label"><strong>Content Link:</strong></label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" value="{{ course.file_link }}" readonly>
+                        <a href="{{ course.file_link }}" class="btn btn-outline-primary" target="_blank">
+                            <i class="fas fa-external-link-alt me-1"></i> Open
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% if course.image_link %}
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label"><strong>Image Link:</strong></label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" value="{{ course.image_link }}" readonly>
+                        <a href="{{ course.image_link }}" class="btn btn-outline-primary" target="_blank">
+                            <i class="fas fa-external-link-alt me-1"></i> Open
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
