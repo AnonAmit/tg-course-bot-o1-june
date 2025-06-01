@@ -1,0 +1,24 @@
+# Telegram Bot Library
+pyrogram==2.0.106
+tgcrypto==1.2.5
+
+# Web Dashboard
+flask==2.3.3
+flask-login==0.6.2
+flask-wtf==1.1.1
+werkzeug==2.3.7
+
+# Database
+# sqlalchemy==2.0.25  # Removed for MongoDB migration
+# alembic==1.12.0  # Removed for MongoDB migration
+pymongo==4.6.0  # Added for MongoDB
+
+# Utils
+python-dotenv==1.0.0
+pillow==10.0.0
+requests==2.31.0
+pyshorteners==1.0.1
+
+# Deployment
+gunicorn==21.2.0
+# psycopg2-binary==2.9.9  # Removed for MongoDB migration 
